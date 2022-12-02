@@ -56,13 +56,13 @@ class Comment(models.Model):
     created = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
 
-def __str__(self):
+    def __str__(self):
         return self.text
-
 # создаем еще одну модель, Follow
 # в ней должно быть 2 поля:
 # кто подписан (user) и на кого подписаны(following)
 # для этой модели в документации уже описан эндпоинт /follow/
+
 
 class Follow(models.Model):
     # поле user будет определено как внешний ключ.
