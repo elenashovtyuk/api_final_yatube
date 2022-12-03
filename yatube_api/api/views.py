@@ -1,9 +1,11 @@
 # TODO:  Напишите свой вариант
-from rest_framework import serializers
+from rest_framework import permissions
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, viewsets
 # из приложения posts импортируем все нужные модели
-from posts.models import Comment, Follow, Group, Post
+from posts.models import Group, Post
+# импортируем кастомный пермишн
+from .permissions import AuthorOrReadOnly
 # из приложения api импортируем все нужные сериализаторы
 from .serializers import (CommentSerializer,
                           FollowSerializer,
@@ -20,6 +22,8 @@ from .serializers import (CommentSerializer,
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    # добавляем кастомный пермишн
+    permission_classes = (AuthorOrReadOnly,)
 
     # переопределяем метод perform_create для того,
     # чтобы поле автора не оставалось пустым
@@ -53,6 +57,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     # указываем сериализатор, котрый будет применяться для
     # валидации и сериализации
     serializer_class = CommentSerializer
+    # добавляем кастомный пермишн
+    permission_classes = (AuthorOrReadOnly,)
 
     # далее переопределяем метод
     def get_queryset(self):
@@ -93,6 +99,16 @@ class FollowViewSet(mixins.CreateModelMixin,
     # поэтому в этом вьюсете нам также нужно переопределить метод
     # get_queryset
     serializer_class = FollowSerializer
+    # согласно ТЗ доступ к эндпоинту /follow/ составляет исключение.
+    # На уровне проекта мы задали уровень доступа IsAuthenticatedOrReadOnly
+    # это значит, что у анонимных пользователей есть права только на чтение
+    # а аутенцифицированные пользователи имеют доступ ко всем ресурсам API
+    # Но для follow должен быть доступ только у аутенцифицированных
+    # пользователей
+    # поэтому мы добавляем новый аттрибут permission_classes
+    # и в нем устанавливаем пермишн
+    # уже на уровне представления
+    permission_classes = (permissions.IsAuthenticated)
 
     def get_queryset(self):
         # нужно получить подписки конкретного пользователя
