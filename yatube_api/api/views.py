@@ -1,5 +1,4 @@
-# TODO:  Напишите свой вариант
-from rest_framework import permissions
+from rest_framework import filters, mixins, permissions, viewsets
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, viewsets
 # из приложения posts импортируем все нужные модели
@@ -109,6 +108,14 @@ class FollowViewSet(mixins.CreateModelMixin,
     # и в нем устанавливаем пермишн
     # уже на уровне представления
     permission_classes = (permissions.IsAuthenticated)
+    # для того, чтобы настроить посик по полям во вьюсете Follow
+    # нужно импортировать filters из rest_framework
+    # и указать 2 аттрибута -
+    # filter_backends - здесь мы указываем фильтрующий бэкенд
+    # search_fields -  здесь мы указываем поля модели,
+    # по которым необходим поиск
+    filters_backends = (filters.SearchFilter,)
+    search_fields = ('following',)
 
     def get_queryset(self):
         # нужно получить подписки конкретного пользователя
