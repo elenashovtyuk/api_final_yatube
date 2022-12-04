@@ -1,10 +1,11 @@
 from rest_framework import filters, mixins, permissions, viewsets
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, viewsets
+from rest_framework.pagination import LimitOffsetPagination
 # из приложения posts импортируем все нужные модели
 from posts.models import Group, Post
 # импортируем кастомный пермишн
-from .permissions import AuthorOrReadOnly
+from .permissions import IsAuthorOrReadOnly
 # из приложения api импортируем все нужные сериализаторы
 from .serializers import (CommentSerializer,
                           FollowSerializer,
@@ -21,8 +22,9 @@ from .serializers import (CommentSerializer,
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    pagination_class = LimitOffsetPagination
     # добавляем кастомный пермишн
-    permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (IsAuthorOrReadOnly,)
 
     # переопределяем метод perform_create для того,
     # чтобы поле автора не оставалось пустым
@@ -57,7 +59,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     # валидации и сериализации
     serializer_class = CommentSerializer
     # добавляем кастомный пермишн
-    permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (IsAuthorOrReadOnly,)
 
     # далее переопределяем метод
     def get_queryset(self):
@@ -107,15 +109,18 @@ class FollowViewSet(mixins.CreateModelMixin,
     # поэтому мы добавляем новый аттрибут permission_classes
     # и в нем устанавливаем пермишн
     # уже на уровне представления
-    permission_classes = (permissions.IsAuthenticated)
+    permission_classes = (permissions.IsAuthenticated,)
     # для того, чтобы настроить посик по полям во вьюсете Follow
     # нужно импортировать filters из rest_framework
     # и указать 2 аттрибута -
     # filter_backends - здесь мы указываем фильтрующий бэкенд
     # search_fields -  здесь мы указываем поля модели,
     # по которым необходим поиск
-    filters_backends = (filters.SearchFilter,)
-    search_fields = ('following',)
+    # для того, чтобы выполнить поиск на ForeignKey или ManyToManyField
+    # используем двойную подстановочную аннотацию для того,
+    # ссылки на свойство некоторого связанного объекта
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('=following__username',)
 
     def get_queryset(self):
         # нужно получить подписки конкретного пользователя
