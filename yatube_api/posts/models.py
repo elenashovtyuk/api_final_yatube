@@ -4,7 +4,6 @@ from django.db import models
 User = get_user_model()
 
 
-# создаем модель Group согласно документации API
 class Group(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
@@ -22,23 +21,6 @@ class Post(models.Model):
         User, on_delete=models.CASCADE, related_name='posts')
     image = models.ImageField(
         upload_to='posts/', null=True, blank=True)
-    # добавляем новое поле в модель Post
-    # это поле представляет собой отношение к другой таблице/модели - Group
-    # оно будет хранить идентификатор группы
-
-    # класс ForeinKey принимает 2 обязательных аргумента
-    # 1. модель, с которой происходит связывание - модель Group
-    # 2. опция on_delete, которая указывает,
-    # что делать при удалении связанного объекта(Group)
-    # в данном случае при удалении первичной модели Group
-    # в поле group модели Post будет стоять NULL
-
-    # кроме того укажем следующие необязательные аргументы:
-
-    # related_name -
-    # имя, используемое для отношения от связанного объекта обратно к нему
-    # т.е group.posts
-
     group = models.ForeignKey(
         Group, on_delete=models.SET_NULL,
         blank=True, null=True, related_name='posts')
@@ -48,6 +30,7 @@ class Post(models.Model):
 
 
 class Comment(models.Model):
+
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='comments')
     post = models.ForeignKey(
@@ -58,29 +41,9 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
-# создаем еще одну модель, Follow
-# в ней должно быть 2 поля:
-# кто подписан (user) и на кого подписаны(following)
-# для этой модели в документации уже описан эндпоинт /follow/
 
 
 class Follow(models.Model):
-    # поле user будет определено как внешний ключ.
-    # оно будет хранить id пользователя, который подписывается
-    # т.е. это поле представляет собой отношение к другой таблице/модели - User
-
-    # класс ForeinKey принимает 2 обязательных аргумента
-    # 1. модель, с которой происходит связывание - User
-    # 2. опция on_delete, которая указывает,
-    # что делать при удалении связанного объекта(User)
-
-    # кроме того укажем следующие необязательные аргументы:
-
-    # related_name -
-    # имя, используемое для отношения от связанного объекта обратно к нему.
-
-    # verbose_name -
-    # понятное для человека имя поля
 
     user = models.ForeignKey(
         User,
@@ -88,14 +51,6 @@ class Follow(models.Model):
         related_name='follower',
         verbose_name='Подписчик'
     )
-    # точно также указываем поле following
-    # oно будет определено как внешний ключ.
-    # оно будет хранить id пользователя, на которого подписываются
-    # т.е. это поле представляет собой отношение к другой таблице/модели - User
-
-    # класс ForeignKey также принимает 2 обязательных аргумента
-    # и дополнительно 2 необязательных
-
     following = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -103,13 +58,6 @@ class Follow(models.Model):
         verbose_name='Подписан'
     )
 
-    # добавим в модель класс Meta, так как нам
-    # нужно добавить данные о самой модели -
-    # укажем в Meta опцию constraints -
-    # ограничения, которые мы добавляем в виде списка
-    # в нашем списке будет одно ограничение
-    # (UniqueConstraint создает уникальное ограничение в БД)
-    # пользователь не может подписаться дважды на одного и того же автора
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=('user', 'following',),
