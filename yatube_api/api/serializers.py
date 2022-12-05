@@ -58,8 +58,6 @@ class PostSerializer(serializers.ModelSerializer):
     # т.е мы получим id группы, а не ее название
     # поэтому это поле мы тоже переопределяем
     # в качестве slug_field указываем title из модели Group
-    group = serializers.SlugRelatedField(
-        slug_field='title', queryset=Group.objects.all(), required=False)
 
     class Meta:
         model = Post
